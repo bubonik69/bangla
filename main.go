@@ -16,10 +16,10 @@ func dnld(epizode int, path string) error {
 	if epizode >= 10 && epizode < 100 {
 		pathRemote += string("0") + fmt.Sprint(epizode) + ".mp3"
 	}
-	if epizode >= 100 && epizode < 1000 {
+	if epizode >= 100 && epizode <= 123 {
 		pathRemote += fmt.Sprint(epizode) + ".mp3"
 	}
-	if epizode < 0 || epizode >= 1000 {
+	if epizode < 0 || epizode > 123 {
 		log.Fatal("No valid epizod number")
 	}
 
