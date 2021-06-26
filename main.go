@@ -6,51 +6,47 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync"
+	"time"
 )
 
-func dnld(epizode int, path string) error {
+func dnld(epizode int, path string, wg *sync.WaitGroup) {
 	pathRemote := "https://golangshow.com/cdn/episodes/"
-	if epizode < 10 {
-		pathRemote += string("00") + fmt.Sprint(epizode) + ".mp3"
-	}
-	if epizode >= 10 && epizode < 100 {
-		pathRemote += string("0") + fmt.Sprint(epizode) + ".mp3"
-	}
-	if epizode >= 100 && epizode <= 123 {
-		pathRemote += fmt.Sprint(epizode) + ".mp3"
-	}
+	pathRemote += fmt.Sprintf("%03d", epizode) + ".mp3"
+	defer wg.Done()
 	if epizode < 0 || epizode > 123 {
 		log.Fatal("No valid epizod number")
 	}
 
 	resp, err := http.Get(pathRemote)
 	if err != nil {
-		return err
+		log.Println(err)
 	}
 	defer resp.Body.Close()
 	// Create the file
 	out, err := os.Create(path)
 	if err != nil {
-		return err
+		log.Println(err)
 	}
 	defer out.Close()
 	// Write the body to file
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
-		return err
+		log.Println(err)
 	} else {
 		fmt.Println("downloaded from URL", pathRemote)
 	}
-	return nil
 }
 
 func main() {
-	for i := 1; i < 100; i++ {
+	start := time.Now()
+	var wg sync.WaitGroup
+	for i := 1; i < 5; i++ {
 		localPath := "files/" + fmt.Sprint(i) + ".mp3"
-		err := dnld(i, localPath)
-		if err != nil {
-			fmt.Println(err)
-		}
+		wg.Add(1)
+		go dnld(i, localPath, &wg)
 	}
-
+	wg.Wait()
+	duration := time.Since(start)
+	fmt.Println("time is:", duration)
 }
